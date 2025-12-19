@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -e
+
+CONFIG_PATH="config.yaml"
+
+DOWNLOADS_PATH="$(eval echo $(yq -r '.paths.output' $CONFIG_PATH))"
+LOGS_PATH="$(eval echo $(yq -r '.paths.log' $CONFIG_PATH))"
+
+BASE_IMAGE_NAME="$(yq -r '.container.base_image' $CONFIG_PATH)"
+IMAGE_NAME="$(yq -r '.container.image' $CONFIG_PATH)"
+CONTAINER_NAME="$(yq -r '.container.name' $CONFIG_PATH)"
+
+SERVER_PORT="$(yq -r '.server.port' $CONFIG_PATH)"
+
+COOKIE_FILE="$(yq -r '.paths.cookies' $CONFIG_PATH)"
+YDL_COOKIE_FILE="$(yq -r '.yt_dlp.cookiefile' $CONFIG_PATH)"
+
+echo "Creating required directories and files..."
+mkdir -p "$DOWNLOADS_PATH"
+touch "$LOGS_PATH"
+
+if [[ "$COOKIE_FILE" != "$YDL_COOKIE_FILE" ]]; then
+    echo "Creating a symbolic link to the cookiefile..."
+    ln -s "$COOKIE_FILE" "$YDL_COOKIE_FILE"
+fi
+
+if podman image exists "$BASE_IMAGE_NAME"; then
+    echo "Base image $BASE_IMAGE_NAME already exists, skipping build."
+else
+    echo "Building base image..."
+    podman build --target "$BASE_IMAGE_NAME" -t "$BASE_IMAGE_NAME" .
+fi
+
+if podman image exists "$IMAGE_NAME"; then
+    echo "Image $IMAGE_NAME already exists, skipping build."
+else
+    echo "Building image..."
+    podman build -t "$IMAGE_NAME" .
+fi
+
+echo "Stopping old container (if exists)..."
+podman stop "$CONTAINER_NAME" 2>/dev/null || true
+
+echo "Removing old container (if exists)..."
+podman rm "$CONTAINER_NAME" 2>/dev/null || true
+
+echo "Starting new container..."
+podman run -d \
+    --name "$CONTAINER_NAME" \
+    --mount type=bind,source="$DOWNLOADS_PATH",target="/app/downloads" \
+    --log-driver k8s-file \
+    --log-opt path="$LOGS_PATH" \
+    -p "${SERVER_PORT}:80" \
+    "$IMAGE_NAME"
+
+echo "Container is running."

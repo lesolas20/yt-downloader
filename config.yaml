@@ -1,0 +1,50 @@
+server:
+  port: 9320
+
+paths:
+  log: "server.log"
+  cookies: "cookies.txt"
+  output: "~/Videos"
+
+container:
+  name: "yt-downloader"
+  base_image: "yt-downloader-base"
+  image: "yt-downloader"
+
+yt_dlp:
+  cookiefile: "cookies.txt"
+  paths:
+    home: "/app/downloads"
+  noplaylist: true
+  live_from_start: true
+  outtmpl:
+    default: "./%(playlist&{}|)s/%(playlist_index&{} - |)s%(title)s - %(channel)s - %(release_date>%Y-%m-%d,upload_date>%Y-%m-%d)s [%(id)s].%(ext)s"
+  format: "bestvideo[height<=1080]+bestaudio/best[height<=1080]"
+  ignoreerrors: "only_download"
+
+  sleep_interval: 10.0
+  max_sleep_interval: 20.0
+  sleep_interval_requests: 1.0
+  sleep_interval_subtitles: 5.0
+
+  ratelimit: 20971520  # 20×2²⁰ = 20MiB
+
+  postprocessors:
+    - api: https://sponsor.ajay.app
+      categories:
+        - selfpromo
+        - preview
+        - sponsor
+      key: SponsorBlock
+      when: after_filter
+    - force_keyframes: false
+      key: ModifyChapters
+      remove_chapters_patterns: []
+      remove_ranges: []
+      remove_sponsor_segments:
+        - sponsor
+      sponsorblock_chapter_title: "[SponsorBlock]: %(category_names)l"
+    - add_chapters: true
+      add_infojson: if_exists
+      add_metadata: true
+      key: FFmpegMetadata
