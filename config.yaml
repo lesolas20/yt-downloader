@@ -12,39 +12,45 @@ container:
   image: "yt-downloader"
 
 yt_dlp:
-  cookiefile: "cookies.txt"
-  paths:
-    home: "/app/downloads"
-  noplaylist: true
+  cookiefile: cookies.txt
+  extract_flat: discard_in_playlist
+  format: bestvideo[height<=1080]+bestaudio/best[height<=1080]
+  fragment_retries: 10
+  ignoreerrors: only_download
   live_from_start: true
-  outtmpl:
-    default: "./%(playlist&{}|)s/%(playlist_index&{} - |)s%(title)s - %(channel)s - %(release_date>%Y-%m-%d,upload_date>%Y-%m-%d)s [%(id)s].%(ext)s"
-  format: "bestvideo[height<=1080]+bestaudio/best[height<=1080]"
-  ignoreerrors: "only_download"
-
-  sleep_interval: 10.0
   max_sleep_interval: 20.0
-  sleep_interval_requests: 1.0
-  sleep_interval_subtitles: 5.0
-
-  ratelimit: 20971520  # 20×2²⁰ = 20MiB
-
+  noplaylist: true
+  outtmpl:
+    default: ./%(playlist&{}|)s/%(playlist_index&{} - |)s%(title)s - %(channel)s -
+      %(release_date>%Y-%m-%d,upload_date>%Y-%m-%d)s [%(id)s].%(ext)s
+  paths:
+    home: /app/downloads
   postprocessors:
-    - api: https://sponsor.ajay.app
-      categories:
-        - selfpromo
-        - preview
-        - sponsor
-      key: SponsorBlock
-      when: after_filter
-    - force_keyframes: false
-      key: ModifyChapters
-      remove_chapters_patterns: []
-      remove_ranges: []
-      remove_sponsor_segments:
-        - sponsor
-      sponsorblock_chapter_title: "[SponsorBlock]: %(category_names)l"
-    - add_chapters: true
-      add_infojson: if_exists
-      add_metadata: true
-      key: FFmpegMetadata
+  - api: https://sponsor.ajay.app
+    categories: !!set
+      preview: null
+      selfpromo: null
+      sponsor: null
+    key: SponsorBlock
+    when: after_filter
+  - force_keyframes: false
+    key: ModifyChapters
+    remove_chapters_patterns: []
+    remove_ranges: []
+    remove_sponsor_segments: !!set
+      sponsor: null
+    sponsorblock_chapter_title: '[SponsorBlock]: %(category_names)l'
+  - add_chapters: true
+    add_infojson: if_exists
+    add_metadata: true
+    key: FFmpegMetadata
+  - key: FFmpegConcat
+    only_multi_video: true
+    when: playlist
+  ratelimit: 20971520
+  retries: 10
+  sleep_interval: 10.0
+  sleep_interval_requests: 1.0
+  sleep_interval_subtitles: 5
+  warn_when_outdated: true
+
