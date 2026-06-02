@@ -1,12 +1,13 @@
-FROM debian:12.12 AS yt-downloader-base
+FROM debian:bookworm-slim AS yt-downloader-base
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y btop iputils-ping lsd \
-    && apt-get install -y python3 python3-pip python3-venv \
-    && apt-get install -y ffmpeg \
-    && apt-get install -y nodejs npm \
+    && apt-get install --yes --no-install-recommends python3 python3-pip python3-venv \
+    && apt-get install --yes --no-install-recommends ffmpeg \
+    && apt-get install --yes --no-install-recommends nodejs npm \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && npm install -g deno \
