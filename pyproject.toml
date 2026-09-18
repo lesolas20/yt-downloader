@@ -1,0 +1,82 @@
+[build-system]
+build-backend = "uv_build"
+requires = [ "uv-build>=0.11.2,<0.13" ]
+
+[project]
+name = "yt-downloader"
+version = "0.2.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.14"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "fastapi[standard]>=0.141.1",
+  "pyyaml>=6.0.3",
+  "uvicorn[standard]>=0.53",
+  "yt-dlp[default]>=2026.8.19",
+]
+scripts.cli-to-yaml = "yt_downloader:cli_to_yaml"
+scripts.serve = "yt_downloader:serve"
+
+[dependency-groups]
+dev = [
+  "types-yt-dlp>=2026.8.19",
+]
+
+[tool.uv]
+prerelease = "disallow"
+prerelease-package = { yt-dlp = "allow" }
+
+[tool.ruff]
+line-length = 79
+format.line-ending = "lf"
+lint.select = [
+  "A",
+  "ANN",
+  "ARG",
+  "ASYNC",
+  "B",
+  "BLE",
+  "C4",
+  "C90",
+  "COM",
+  "DOC",
+  "DTZ",
+  "E",
+  "EM",
+  "F",
+  "FBT",
+  "FLY",
+  "FURB",
+  "I",
+  "INP",
+  "ISC",
+  "LOG",
+  "N",
+  "N",
+  "PERF",
+  "PIE",
+  "PL",
+  "PLE",
+  "PLR",
+  "PLW",
+  "PT",
+  "PTH",
+  "Q",
+  "RET",
+  "RUF",
+  "S",
+  "SIM",
+  "SLF",
+  "T20",
+  "TC",
+  "TRY",
+  "UP",
+  "W",
+]
+lint.ignore = [ "SIM108" ]
+lint.isort.length-sort = true
+lint.pycodestyle.max-doc-length = 72
